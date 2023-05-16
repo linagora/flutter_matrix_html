@@ -951,76 +951,107 @@ class TextParser extends StatelessWidget {
       linkStyle: linkStyle,
     );
     final nodeParsed = _parseNode(context, parseContext, parser.parseFragment(data));
-    Widget widget = nodeParsed;
-    if (bottomWidgetSpan != null) {
-      if (nodeParsed is CleanRichText) {
-        widget = CleanRichText(
-          _optimizeTextspan(TextSpan(
-            children: [
-              nodeParsed.child,
-              WidgetSpan(child: bottomWidgetSpan!)
-            ]
-          )),
-          maxLines: maxLines
-        );
-      } if (nodeParsed is Column && nodeParsed.children.isNotEmpty) {
-        final lastChild = nodeParsed.children.removeLast();
-        Widget newLastChild;
-        if (lastChild is CleanRichText) {
-          newLastChild = CleanRichText(
-            _optimizeTextspan(TextSpan(
-              children: [
-                lastChild.child,
-                WidgetSpan(child: bottomWidgetSpan!)
-              ]
-            )),
-            maxLines: maxLines
-          );
-          widget = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ...nodeParsed.children,
-              newLastChild
-            ]
-          );
-        } else {
-          newLastChild = CleanRichText(
-            _optimizeTextspan(TextSpan(
-              children: [
-                WidgetSpan(child: lastChild),
-                WidgetSpan(child: bottomWidgetSpan!)
-              ]
-            )),
-            maxLines: maxLines
-          );
-        }
-        widget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ...nodeParsed.children,
-            newLastChild
-          ]
-        );
-      } else {
-        widget = CleanRichText(
-          _optimizeTextspan(TextSpan(
-            children: [
-              WidgetSpan(child: nodeParsed),
-              WidgetSpan(child: bottomWidgetSpan!)
-            ]
-          )),
-          maxLines: maxLines
-        );
-      }
-    }
+    final widget = bottomWidgetSpan != null
+      ? _addWidgetSpanToWidget(widgetSpan: bottomWidgetSpan!, nodeParsed: nodeParsed)
+      : nodeParsed;
+
     if (shrinkToFit) {
       return widget;
     }
     return Container(
       width: double.infinity,
       child: widget,
+    );
+  }
+
+  Widget _addWidgetSpanToWidget({required Widget widgetSpan, required Widget nodeParsed}) {
+    if (nodeParsed is CleanRichText) {
+      return _addWidgetSpanToCleanRichText(widgetSpan: widgetSpan, richText: nodeParsed);
+    } if (nodeParsed is Column && nodeParsed.children.isNotEmpty) {
+      return _addWidgetSpanToColumn(widgetSpan: widgetSpan, column: nodeParsed);
+    } else {
+      return CleanRichText(
+        _optimizeTextspan(TextSpan(
+          children: [
+            WidgetSpan(child: nodeParsed),
+            WidgetSpan(child: widgetSpan)
+          ]
+        )),
+        maxLines: maxLines
+      );
+    }
+  }
+
+  Widget _addWidgetSpanToCleanRichText({required Widget widgetSpan, required CleanRichText richText}) {
+    final childRichText = richText.child;
+    if (childRichText is TextSpan) {
+      return CleanRichText(
+        _optimizeTextspan(TextSpan(
+          text: childRichText.text,
+          children: [
+            if (childRichText.children?.isNotEmpty == true)
+              ...childRichText.children!,
+            WidgetSpan(child: widgetSpan)
+          ]
+        )),
+        maxLines: richText.maxLines,
+        textAlign: richText.textAlign,
+      );
+    } if (childRichText is LinkTextSpan) {
+      return CleanRichText(
+        _optimizeTextspan(TextSpan(
+          text: childRichText.text,
+          children: [
+            if (childRichText.children?.isNotEmpty == true)
+              ...childRichText.children!,
+            WidgetSpan(child: widgetSpan)
+          ]
+        )),
+        maxLines: richText.maxLines,
+        textAlign: richText.textAlign,
+      );
+    } else {
+      return CleanRichText(
+        _optimizeTextspan(TextSpan(
+          children: [
+            childRichText,
+            WidgetSpan(child: widgetSpan)
+          ]
+        )),
+        maxLines: richText.maxLines,
+        textAlign: richText.textAlign,
+      );
+    }
+  }
+
+  Widget _addWidgetSpanToColumn({required Widget widgetSpan, required Column column}) {
+    final columnChildren = column.children;
+    final lastChild = columnChildren.removeLast();
+    Widget newLastChild;
+    if (lastChild is CleanRichText) {
+      newLastChild = _addWidgetSpanToCleanRichText(widgetSpan: widgetSpan, richText: lastChild);
+    } else {
+      newLastChild = CleanRichText(
+        _optimizeTextspan(TextSpan(
+          children: [
+            WidgetSpan(child: lastChild),
+            WidgetSpan(child: widgetSpan)
+          ]
+        )),
+        maxLines: maxLines
+      );
+    }
+    return Column(
+      crossAxisAlignment: column.crossAxisAlignment,
+      mainAxisAlignment: column.mainAxisAlignment,
+      mainAxisSize: column.mainAxisSize,
+      textDirection: column.textDirection,
+      textBaseline: column.textBaseline,
+      verticalDirection: column.verticalDirection,
+      children: [
+        ...columnChildren,
+        newLastChild
+      ]
     );
   }
 }
