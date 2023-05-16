@@ -104,6 +104,7 @@ class TextParser extends StatelessWidget {
     this.emoteSize,
     this.setCodeLanguage,
     this.getCodeLanguage,
+    this.bottomWidgetSpan,
   });
 
   final double indentSize = 10.0;
@@ -125,6 +126,7 @@ class TextParser extends StatelessWidget {
   final double? emoteSize;
   final SetCodeLanguage? setCodeLanguage;
   final GetCodeLanguage? getCodeLanguage;
+  final Widget? bottomWidgetSpan;
 
   TextSpan _parseTextNode(
       BuildContext context, ParseContext parseContext, dom.Text node) {
@@ -948,8 +950,31 @@ class TextParser extends StatelessWidget {
       textStyle: defaultTextStyle,
       linkStyle: linkStyle,
     );
-    final widget =
-        _parseNode(context, parseContext, parser.parseFragment(data));
+    final nodeParsed = _parseNode(context, parseContext, parser.parseFragment(data));
+    Widget widget = nodeParsed;
+    if (bottomWidgetSpan != null) {
+      if (nodeParsed is CleanRichText) {
+        widget = CleanRichText(
+          _optimizeTextspan(TextSpan(
+            children: [
+              nodeParsed.child,
+              WidgetSpan(child: bottomWidgetSpan!)
+            ]
+          )),
+          maxLines: maxLines
+        );
+      } else {
+        widget = CleanRichText(
+          _optimizeTextspan(TextSpan(
+            children: [
+              WidgetSpan(child: nodeParsed),
+              WidgetSpan(child: bottomWidgetSpan!)
+            ]
+          )),
+          maxLines: maxLines
+        );
+      }
+    }
     if (shrinkToFit) {
       return widget;
     }
