@@ -963,6 +963,46 @@ class TextParser extends StatelessWidget {
           )),
           maxLines: maxLines
         );
+      } if (nodeParsed is Column && nodeParsed.children.isNotEmpty) {
+        final lastChild = nodeParsed.children.removeLast();
+        Widget newLastChild;
+        if (lastChild is CleanRichText) {
+          newLastChild = CleanRichText(
+            _optimizeTextspan(TextSpan(
+              children: [
+                lastChild.child,
+                WidgetSpan(child: bottomWidgetSpan!)
+              ]
+            )),
+            maxLines: maxLines
+          );
+          widget = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...nodeParsed.children,
+              newLastChild
+            ]
+          );
+        } else {
+          newLastChild = CleanRichText(
+            _optimizeTextspan(TextSpan(
+              children: [
+                WidgetSpan(child: lastChild),
+                WidgetSpan(child: bottomWidgetSpan!)
+              ]
+            )),
+            maxLines: maxLines
+          );
+        }
+        widget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ...nodeParsed.children,
+            newLastChild
+          ]
+        );
       } else {
         widget = CleanRichText(
           _optimizeTextspan(TextSpan(
