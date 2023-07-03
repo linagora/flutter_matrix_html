@@ -32,6 +32,7 @@ class Html extends StatelessWidget {
     this.getCodeLanguage,
     this.setCodeLanguage,
     this.inlineSpanEnd,
+    this.pillBuilder,
   }) : super(key: key);
 
   final String data;
@@ -57,6 +58,7 @@ class Html extends StatelessWidget {
   /// Setting and getting code langauge cache
   final SetCodeLanguage? setCodeLanguage;
   final GetCodeLanguage? getCodeLanguage;
+  final PillBuilder? pillBuilder;
 
   final InlineSpan? inlineSpanEnd;
 
@@ -89,6 +91,7 @@ class Html extends StatelessWidget {
           setCodeLanguage: setCodeLanguage,
           getCodeLanguage: getCodeLanguage,
           inlineSpanEnd: inlineSpanEnd,
+          pillBuilder: pillBuilder,
         ),
       ),
     );
