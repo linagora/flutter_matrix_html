@@ -18,7 +18,7 @@ import 'textspan_extension.dart';
 import 'node_extension.dart';
 
 typedef CustomRender = Widget Function(dom.Node node, List<Widget> children);
-typedef OnLinkTap = void Function(String url);
+typedef OnLinkTap = void Function(Uri url);
 typedef OnImageTap = void Function(String source);
 typedef OnPillTap = void Function(String identifier);
 typedef GetMxcUrl = String Function(String mxc, double? width, double? height,
@@ -478,7 +478,7 @@ class TextParser extends StatelessWidget {
               parseContext.textStyle.merge(parseContext.linkStyle);
           return LinkTextSpan(
             style: nextContext.textStyle,
-            url: url ?? '',
+            url: Uri.tryParse(url ?? '') ?? Uri(),
             onLinkTap: onLinkTap,
             children: <InlineSpan>[
               _parseInlineChildNodes(context, nextContext, node.nodes)
