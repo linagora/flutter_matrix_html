@@ -1002,20 +1002,22 @@ class TextParser extends StatelessWidget {
     if (childRichText is TextSpan) {
       return CleanRichText(
         TextSpan(
-          text: childRichText.text,
-          style: childRichText.style,
-          recognizer: childRichText.recognizer,
-          mouseCursor: childRichText.mouseCursor,
-          onEnter: childRichText.onEnter,
-          onExit: childRichText.onExit,
-          semanticsLabel: childRichText.semanticsLabel,
-          locale: childRichText.locale,
-          spellOut: childRichText.spellOut,
           children: [
-            if (childRichText.children != null)
-              ...childRichText.children!,
+            TextSpan(
+                text: childRichText.text,
+                style: childRichText.style,
+                recognizer: childRichText.recognizer,
+                mouseCursor: childRichText.mouseCursor,
+                onEnter: childRichText.onEnter,
+                onExit: childRichText.onExit,
+                semanticsLabel: childRichText.semanticsLabel,
+                locale: childRichText.locale,
+                spellOut: childRichText.spellOut,
+                children: [
+                  if (childRichText.children != null) ...childRichText.children!,
+                ]),
             inlineSpan
-          ]
+          ],
         ),
         maxLines: richText.maxLines,
         textAlign: richText.textAlign,
