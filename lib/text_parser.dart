@@ -840,7 +840,7 @@ class TextParser extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: entries.map((e) {
+            children: entries.take(maxLines ?? entries.length).map((e) {
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 0.5),
                 child: Row(
