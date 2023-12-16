@@ -80,6 +80,7 @@ const SUPPORTED_BLOCK_ELEMENTS = <String>{
   'hr',
   'details',
   'summary',
+  'br',
 };
 
 class TextParser extends StatelessWidget {
