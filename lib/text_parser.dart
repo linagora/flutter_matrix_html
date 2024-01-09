@@ -939,6 +939,8 @@ class TextParser extends StatelessWidget {
             summary: summaryRes.isEmpty ? null : summaryRes.first,
             color: defaultTextStyle?.color ?? Colors.black,
           );
+        case 'br':
+          return Text('', style: nextContext.textStyle);
       }
       return _parseChildNodes(context, nextContext, node.nodes);
     } else {
