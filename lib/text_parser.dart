@@ -80,7 +80,6 @@ const SUPPORTED_BLOCK_ELEMENTS = <String>{
   'hr',
   'details',
   'summary',
-  'br',
 };
 
 class TextParser extends StatelessWidget {
@@ -610,7 +609,7 @@ class TextParser extends StatelessWidget {
       ParseContext parseContext, List<dom.Node> nodes, Iterable<String> tags) {
     final widgets = <Widget>[];
     for (final node in nodes) {
-      if (!(node is dom.Element) ||
+      if (node is! dom.Element ||
           !tags.contains(node.localName?.toLowerCase())) {
         continue;
       }
@@ -720,7 +719,8 @@ class TextParser extends StatelessWidget {
     );
   }
 
-  static const _listBulletPoints = <String>['●', '○', '■', '‣'];
+  // TW-1328: replace bullet points with a dash
+  // static const _listBulletPoints = <String>['●', '○', '■', '‣'];
 
   Widget _parseNode(
       BuildContext context, ParseContext parseContext, dom.Node node) {
@@ -833,8 +833,10 @@ class TextParser extends StatelessWidget {
           ));
           break;
         case 'ul':
-          final bulletPoint = _listBulletPoints[
-              parseContext.listDepth % _listBulletPoints.length];
+          // TW-1328: replace bullet points with a dash
+          // final bulletPoint = _listBulletPoints[
+          //     parseContext.listDepth % _listBulletPoints.length];
+          final bulletPoint = '-';
           nextContext.listDepth++;
           final entries =
               _parseChildNodesList(context, nextContext, node.nodes, {'li'});
@@ -852,6 +854,7 @@ class TextParser extends StatelessWidget {
                       width: fontSize,
                       child: Text(bulletPoint, style: parseContext.textStyle),
                     ),
+                    SizedBox(width: parseContext.textStyle.height),
                     Flexible(child: e),
                   ],
                 ),
@@ -939,8 +942,6 @@ class TextParser extends StatelessWidget {
             summary: summaryRes.isEmpty ? null : summaryRes.first,
             color: defaultTextStyle?.color ?? Colors.black,
           );
-        case 'br':
-          return Text('', style: nextContext.textStyle);
       }
       return _parseChildNodes(context, nextContext, node.nodes);
     } else {
