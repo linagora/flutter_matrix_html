@@ -719,8 +719,7 @@ class TextParser extends StatelessWidget {
     );
   }
 
-  // TW-1328: replace bullet points with a dash
-  // static const _listBulletPoints = <String>['●', '○', '■', '‣'];
+  static const _listBulletPoints = <String>['-', '○', '■', '‣'];
 
   Widget _parseNode(
       BuildContext context, ParseContext parseContext, dom.Node node) {
