@@ -609,7 +609,7 @@ class TextParser extends StatelessWidget {
       ParseContext parseContext, List<dom.Node> nodes, Iterable<String> tags) {
     final widgets = <Widget>[];
     for (final node in nodes) {
-      if (node is! dom.Element ||
+      if (!(node is dom.Element) ||
           !tags.contains(node.localName?.toLowerCase())) {
         continue;
       }
@@ -719,7 +719,7 @@ class TextParser extends StatelessWidget {
     );
   }
 
-  static const _listBulletPoints = <String>['-', '○', '■', '‣'];
+  static const _listBulletPoints = <String>['-', '-', '-', '‣'];
 
   Widget _parseNode(
       BuildContext context, ParseContext parseContext, dom.Node node) {
@@ -832,17 +832,15 @@ class TextParser extends StatelessWidget {
           ));
           break;
         case 'ul':
-          // TW-1328: replace bullet points with a dash
-          // final bulletPoint = _listBulletPoints[
-          //     parseContext.listDepth % _listBulletPoints.length];
-          final bulletPoint = '-';
+          final bulletPoint = _listBulletPoints[
+              parseContext.listDepth % _listBulletPoints.length];
           nextContext.listDepth++;
           final entries =
               _parseChildNodesList(context, nextContext, node.nodes, {'li'});
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: entries.take(maxLines ?? entries.length).map((e) {
+            children: entries.map((e) {
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 0.5),
                 child: Row(
@@ -853,7 +851,6 @@ class TextParser extends StatelessWidget {
                       width: fontSize,
                       child: Text(bulletPoint, style: parseContext.textStyle),
                     ),
-                    SizedBox(width: parseContext.textStyle.height),
                     Flexible(child: e),
                   ],
                 ),
@@ -961,7 +958,7 @@ class TextParser extends StatelessWidget {
     String data = html;
 
     if (renderNewlines) {
-      data = data.replaceAll('\n', '<br/>');
+      data = data.replaceAll('\n', '<br />');
     }
 
     final parseContext = ParseContext(
