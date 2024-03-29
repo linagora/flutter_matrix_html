@@ -846,17 +846,20 @@ class TextParser extends StatelessWidget {
             children: entries.take(maxLines ?? entries.length).map((e) {
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 0.5),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    SizedBox(
-                      width: fontSize,
-                      child: Text(bulletPoint, style: parseContext.textStyle),
-                    ),
-                    SizedBox(width: parseContext.textStyle.height),
-                    Flexible(child: e),
-                  ],
+                child: MediaQuery(
+                  data: MediaQueryData(textScaler: TextScaler.linear(1.0)),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      SizedBox(
+                        width: fontSize,
+                        child: Text(bulletPoint, style: parseContext.textStyle),
+                      ),
+                      SizedBox(width: parseContext.textStyle.height),
+                      Flexible(child: e),
+                    ],
+                  ),
                 ),
               );
             }).toList(),
