@@ -993,7 +993,9 @@ class TextParser extends StatelessWidget {
         TextSpan(
           children: [
             WidgetSpan(child: nodeParsed),
-            inlineSpan
+            WidgetSpan(
+                child: Container(
+                    color: Colors.blue, child: Text.rich(inlineSpan))),
           ]
         ),
         maxLines: maxLines
@@ -1020,7 +1022,11 @@ class TextParser extends StatelessWidget {
                 children: [
                   if (childRichText.children != null) ...childRichText.children!,
                 ]),
-            inlineSpan
+            WidgetSpan(
+                child: Container(
+              child: Text.rich(inlineSpan),
+              color: Colors.blue,
+            ))
           ],
         ),
         maxLines: richText.maxLines,
@@ -1050,8 +1056,16 @@ class TextParser extends StatelessWidget {
       newLastChild = CleanRichText(
         TextSpan(
           children: [
-            WidgetSpan(child: lastChild),
-            inlineSpan
+            WidgetSpan(
+                child: Container(
+              color: Colors.red,
+              child: lastChild,
+            )),
+            WidgetSpan(
+                child: Container(
+              color: Colors.blue,
+              child: Text.rich(inlineSpan),
+            ))
           ]
         ),
         maxLines: maxLines
