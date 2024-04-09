@@ -837,6 +837,7 @@ class TextParser extends StatelessWidget {
           // final bulletPoint = _listBulletPoints[
           //     parseContext.listDepth % _listBulletPoints.length];
           final bulletPoint = '-';
+          final bulletPointToTextSpacing = ' ';
           nextContext.listDepth++;
           final entries =
               _parseChildNodesList(context, nextContext, node.nodes, {'li'});
@@ -846,20 +847,14 @@ class TextParser extends StatelessWidget {
             children: entries.take(maxLines ?? entries.length).map((e) {
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 0.5),
-                child: MediaQuery(
-                  data: MediaQueryData(textScaler: TextScaler.linear(1.0)),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      SizedBox(
-                        width: fontSize,
-                        child: Text(bulletPoint, style: parseContext.textStyle),
-                      ),
-                      SizedBox(width: parseContext.textStyle.height),
-                      Flexible(child: e),
-                    ],
-                  ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(bulletPoint + bulletPointToTextSpacing,
+                        style: parseContext.textStyle),
+                    Flexible(child: e),
+                  ],
                 ),
               );
             }).toList(),
