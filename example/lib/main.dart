@@ -165,8 +165,11 @@ hmmm <ruby style="ruby-position: under;">
 <p>
 outside ruby <ruby>inside ruby<rp>(</rp><rt>rt</rt><rp>)</rp> moar ruby</ruby> outside ruby
 </p>
+<p>
+  08698332661
+</p>
             """,
-            onLinkTap: (url) => print('clicked on url $url'),
+            onTapLink: (link) => print('clicked on link $link'),
             linkStyle: TextStyle(decoration: TextDecoration.underline),
             shrinkToFit: true,
           ),

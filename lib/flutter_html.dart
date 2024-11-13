@@ -1,6 +1,7 @@
 library flutter_matrix_html;
 
 import 'package:flutter/material.dart';
+import 'package:linkfy_text/linkfy_text.dart';
 import 'text_parser.dart';
 
 import 'image_properties.dart';
@@ -13,7 +14,8 @@ class Html extends StatelessWidget {
     this.padding,
     this.backgroundColor,
     this.defaultTextStyle,
-    this.onLinkTap,
+    this.onTapLink,
+    this.onTapDownLink,
     this.renderNewlines = false,
     this.onImageError,
     this.linkStyle = const TextStyle(
@@ -33,13 +35,15 @@ class Html extends StatelessWidget {
     this.setCodeLanguage,
     this.inlineSpanEnd,
     this.pillBuilder,
+    this.linkTypes,
   }) : super(key: key);
 
   final String data;
   final EdgeInsetsGeometry? padding;
   final Color? backgroundColor;
   final TextStyle? defaultTextStyle;
-  final OnLinkTap? onLinkTap;
+  final OnTapDownLink? onTapDownLink;
+  final OnTapLink? onTapLink;
   final bool renderNewlines;
   final ImageErrorListener? onImageError;
   final TextStyle? linkStyle;
@@ -62,6 +66,8 @@ class Html extends StatelessWidget {
 
   final InlineSpan? inlineSpanEnd;
 
+  final List<LinkType>? linkTypes;
+
   @override
   Widget build(BuildContext context) {
     final width = shrinkToFit ? null : MediaQuery.of(context).size.width;
@@ -73,8 +79,10 @@ class Html extends StatelessWidget {
       child: DefaultTextStyle.merge(
         style: defaultTextStyle ?? DefaultTextStyle.of(context).style,
         child: TextParser(
+          linkTypes: linkTypes,
           shrinkToFit: shrinkToFit,
-          onLinkTap: onLinkTap,
+          onTapLink: onTapLink,
+          onTapDownLink: onTapDownLink,
           renderNewlines: renderNewlines,
           html: data,
           onImageError: onImageError,
