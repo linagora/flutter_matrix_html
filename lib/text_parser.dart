@@ -4,9 +4,9 @@ import 'package:html/parser.dart' as parser;
 import 'package:csslib/parser.dart' as cssParser;
 import 'package:csslib/visitor.dart' as css;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:matrix_link_text/link_text.dart';
 import 'package:flutter_highlight/themes/monokai.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:linkfy_text/linkfy_text.dart';
 
 import 'color_extension.dart';
 import 'code_block.dart';
@@ -18,7 +18,8 @@ import 'textspan_extension.dart';
 import 'node_extension.dart';
 
 typedef CustomRender = Widget Function(dom.Node node, List<Widget> children);
-typedef OnLinkTap = void Function(Uri url);
+typedef OnTapDownLink = void Function(TapDownDetails tapDownDetails, Link link);
+typedef OnTapLink = void Function(Link link);
 typedef OnImageTap = void Function(String source);
 typedef OnPillTap = void Function(String identifier);
 typedef GetMxcUrl = String Function(String mxc, double? width, double? height,
@@ -85,7 +86,7 @@ const SUPPORTED_BLOCK_ELEMENTS = <String>{
 class TextParser extends StatelessWidget {
   TextParser({
     this.shrinkToFit = false,
-    this.onLinkTap,
+    this.onTapLink,
     this.renderNewlines = false,
     required this.html,
     this.onImageError,
@@ -107,12 +108,15 @@ class TextParser extends StatelessWidget {
     this.getCodeLanguage,
     this.inlineSpanEnd,
     this.pillBuilder,
+    this.linkTypes,
+    this.onTapDownLink,
   });
 
   final double indentSize = 10.0;
 
   final bool shrinkToFit;
-  final OnLinkTap? onLinkTap;
+  final OnTapDownLink? onTapDownLink;
+  final OnTapLink? onTapLink;
   final bool renderNewlines;
   final String html;
   final ImageErrorListener? onImageError;
@@ -130,6 +134,7 @@ class TextParser extends StatelessWidget {
   final GetCodeLanguage? getCodeLanguage;
   final InlineSpan? inlineSpanEnd;
   final PillBuilder? pillBuilder;
+  final List<LinkType>? linkTypes;
 
   TextSpan _parseTextNode(
       BuildContext context, ParseContext parseContext, dom.Text node) {
@@ -148,11 +153,17 @@ class TextParser extends StatelessWidget {
         }
       }
     }
-    return LinkTextSpans(
+    return LinkifyTextSpans(
       text: finalText,
-      themeData: Theme.of(context),
-      onLinkTap: onLinkTap,
+      onTapDownLink: onTapDownLink,
+      onTapLink: onTapLink,
       textStyle: parseContext.textStyle,
+      themeData: Theme.of(context),
+      linkTypes: linkTypes ??
+          const [
+            LinkType.phone,
+            LinkType.url,
+          ],
       linkStyle: parseContext.textStyle.merge(parseContext.linkStyle),
     );
   }
@@ -464,13 +475,15 @@ class TextParser extends StatelessWidget {
             if (isPill) {
               return WidgetSpan(
                 alignment: PlaceholderAlignment.middle,
-                child: pillBuilder?.call(identifier, url, onPillTap, getMxcUrl) ?? Pill(
-                  identifier: identifier,
-                  url: url,
-                  future: getPillInfo?.call(url),
-                  onTap: onPillTap,
-                  getMxcUrl: getMxcUrl,
-                ),
+                child:
+                    pillBuilder?.call(identifier, url, onPillTap, getMxcUrl) ??
+                        Pill(
+                          identifier: identifier,
+                          url: url,
+                          future: getPillInfo?.call(url),
+                          onTap: onPillTap,
+                          getMxcUrl: getMxcUrl,
+                        ),
               );
             }
           }
@@ -478,8 +491,8 @@ class TextParser extends StatelessWidget {
               parseContext.textStyle.merge(parseContext.linkStyle);
           return LinkTextSpan(
             style: nextContext.textStyle,
-            url: Uri.tryParse(url ?? '') ?? Uri(),
-            onLinkTap: onLinkTap,
+            link: Link.parse(value: url ?? '', type: LinkType.url),
+            onTapLink: onTapLink,
             children: <InlineSpan>[
               _parseInlineChildNodes(context, nextContext, node.nodes)
             ],
