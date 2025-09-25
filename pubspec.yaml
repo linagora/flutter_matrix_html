@@ -15,10 +15,7 @@ dependencies:
 
   # Fixed RenderObjectWithLayoutCallbackMixin not found and will back to upstream whenever we upgrade to 3.29
   #  # See: https://github.com/simpleclub/flutter_math/issues/110
-  flutter_math_fork:
-    git:
-      url: https://github.com/dakshatsuraasa/flutter_math.git
-      ref: main
+  flutter_math_fork: ^0.7.4
 
   html: ^0.15.0
 
