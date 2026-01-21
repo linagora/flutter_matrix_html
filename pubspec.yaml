@@ -11,14 +11,13 @@ dependencies:
   linkfy_text:
     git:
       url: git@github.com:linagora/linkfy_text.git
-      ref: main
+      ref: enhancement/separate-date-with-phone-number
 
   # Fixed RenderObjectWithLayoutCallbackMixin not found and will back to upstream whenever we upgrade to 3.29
   #  # See: https://github.com/simpleclub/flutter_math/issues/110
   flutter_math_fork: ^0.7.4
 
   html: ^0.15.0
-
 
   flutter:
     sdk: flutter
