@@ -19,11 +19,14 @@ dependencies:
 
   html: ^0.15.0
 
-
   flutter:
     sdk: flutter
   cached_network_image: ^3.0.0
-  flutter_highlight: ^0.7.0
+  flutter_highlight:
+    git:
+      url: https://github.com/linagora/highlight.dart.git
+      path: flutter_highlight
+      ref: hotfix/selectable-highlight
   isolate: ^2.0.3
   highlight: ^0.7.0
   crypto: ^3.0.1
