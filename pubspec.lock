@@ -223,8 +223,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: main
-      resolved-ref: "6690e87f19e024d70b68efbc70d2159c34b5d0fc"
+      ref: "enhancement/separate-date-with-phone-number"
+      resolved-ref: "92d288a7fd4b355aa9b6402a5c0aefcae21e94e0"
       url: "git@github.com:linagora/linkfy_text.git"
     source: git
     version: "1.1.6"
