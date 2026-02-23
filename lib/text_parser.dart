@@ -254,11 +254,23 @@ class TextParser extends StatelessWidget {
   }
 
   InlineSpan _parseInlineChildNodes(
-      BuildContext context, ParseContext parseContext, List<dom.Node> nodes) {
+    BuildContext context,
+    ParseContext parseContext,
+    List<dom.Node> nodes, {
+    dom.Node? parent,
+  }) {
     final children = <InlineSpan>[];
     for (final node in nodes) {
       final ts = _parseInlineNode(context, parseContext, node);
       children.add(ts);
+    }
+    if (parent is dom.Element && parent.localName?.toLowerCase() == 'code') {
+      return WidgetSpan(
+        child: ColoredBox(
+          color: monokaiTheme['root']?.backgroundColor ?? Colors.transparent,
+          child: Text.rich(TextSpan(children: children)),
+        ),
+      );
     }
     return TextSpan(children: children);
   }
@@ -340,12 +352,10 @@ class TextParser extends StatelessWidget {
         case 'code':
           nextContext.textStyle = nextContext.textStyle.merge(TextStyle(
             fontFamily: 'monospace',
-            backgroundColor: monokaiTheme['root']?.backgroundColor,
             color: monokaiTheme['root']?.color,
           ));
           nextContext.linkStyle = nextContext.linkStyle.merge(TextStyle(
             fontFamily: 'monospace',
-            backgroundColor: monokaiTheme['root']?.backgroundColor,
             color: monokaiTheme['root']?.color,
           ));
           break;
@@ -612,7 +622,12 @@ class TextParser extends StatelessWidget {
           }
           return TextSpan(children: children);
       }
-      return _parseInlineChildNodes(context, nextContext, node.nodes);
+      return _parseInlineChildNodes(
+        context,
+        nextContext,
+        node.nodes,
+        parent: node,
+      );
     } else {
       return WidgetSpan(child: _parseNode(context, parseContext, node));
     }
