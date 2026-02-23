@@ -130,8 +130,8 @@ packages:
     dependency: "direct main"
     description:
       path: flutter_highlight
-      ref: "hotfix/selectable-highlight"
-      resolved-ref: "79577f47620888337f2bb86d2fe0e0375b982d9f"
+      ref: master
+      resolved-ref: "5bc7077ed36c33e4869a16388fcf94272f84c9ea"
       url: "https://github.com/linagora/highlight.dart.git"
     source: git
     version: "0.7.0"
