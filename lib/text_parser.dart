@@ -503,6 +503,7 @@ class TextParser extends StatelessWidget {
             style: nextContext.textStyle,
             link: Link.parse(value: url ?? '', type: LinkType.url),
             onTapLink: onTapLink,
+            onTapDownLink: onTapDownLink,
             children: <InlineSpan>[
               _parseInlineChildNodes(context, nextContext, node.nodes)
             ],
