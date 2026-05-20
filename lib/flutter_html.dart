@@ -16,6 +16,7 @@ class Html extends StatelessWidget {
     this.defaultTextStyle,
     this.onTapLink,
     this.onTapDownLink,
+    this.linkBuilder,
     this.renderNewlines = false,
     this.onImageError,
     this.linkStyle = const TextStyle(
@@ -43,6 +44,7 @@ class Html extends StatelessWidget {
   final Color? backgroundColor;
   final TextStyle? defaultTextStyle;
   final OnTapDownLink? onTapDownLink;
+  final HtmlLinkBuilder? linkBuilder;
   final OnTapLink? onTapLink;
   final bool renderNewlines;
   final ImageErrorListener? onImageError;
@@ -83,6 +85,7 @@ class Html extends StatelessWidget {
           shrinkToFit: shrinkToFit,
           onTapLink: onTapLink,
           onTapDownLink: onTapDownLink,
+          linkBuilder: linkBuilder,
           renderNewlines: renderNewlines,
           html: data,
           onImageError: onImageError,

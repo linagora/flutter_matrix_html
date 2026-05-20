@@ -27,6 +27,17 @@ typedef GetMxcUrl = String Function(String mxc, double? width, double? height,
 typedef GetPillInfo = Future<Map<String, dynamic>> Function(String identifier);
 typedef PillBuilder = Widget? Function(String identifier, String url, OnPillTap? onTap, GetMxcUrl? getMxcUrl);
 
+/// Builder for rendering HTML `<a href>` links as custom [InlineSpan]s.
+///
+/// Receives the target [url], the already-rendered [childrenSpan] (the inner
+/// content of the anchor, possibly rich text), and the ambient [style].
+/// Return `null` to fall back to the default [LinkTextSpan] behaviour.
+typedef HtmlLinkBuilder = InlineSpan? Function(
+  String url,
+  InlineSpan childrenSpan,
+  TextStyle? style,
+);
+
 const OFFSET_TAGS_FONT_SIZE_FACTOR =
     0.7; //The ratio of the parent font for each of the offset tags: sup or sub
 
@@ -110,12 +121,14 @@ class TextParser extends StatelessWidget {
     this.pillBuilder,
     this.linkTypes,
     this.onTapDownLink,
+    this.linkBuilder,
   });
 
   final double indentSize = 10.0;
 
   final bool shrinkToFit;
   final OnTapDownLink? onTapDownLink;
+  final HtmlLinkBuilder? linkBuilder;
   final OnTapLink? onTapLink;
   final bool renderNewlines;
   final String html;
@@ -136,7 +149,7 @@ class TextParser extends StatelessWidget {
   final PillBuilder? pillBuilder;
   final List<LinkType>? linkTypes;
 
-  TextSpan _parseTextNode(
+  InlineSpan _parseTextNode(
       BuildContext context, ParseContext parseContext, dom.Text node) {
     var finalText = node.text;
     if (parseContext.condenseWhitespace) {
@@ -153,19 +166,43 @@ class TextParser extends StatelessWidget {
         }
       }
     }
-    return LinkifyTextSpans(
+    final builder = linkBuilder;
+    if (builder != null && parseContext.insideAnchor) {
+      return TextSpan(text: finalText, style: parseContext.textStyle);
+    }
+    final result = LinkifyTextSpans(
       text: finalText,
       onTapDownLink: onTapDownLink,
       onTapLink: onTapLink,
       textStyle: parseContext.textStyle,
       themeData: Theme.of(context),
-      linkTypes: linkTypes ??
-          const [
-            LinkType.phone,
-            LinkType.url,
-          ],
+      linkTypes: linkTypes ?? const [LinkType.phone, LinkType.url],
       linkStyle: parseContext.textStyle.merge(parseContext.linkStyle),
     );
+    if (builder == null) return result;
+    return _applyLinkBuilderToAutoLinks(result, builder);
+  }
+
+  InlineSpan _applyLinkBuilderToAutoLinks(InlineSpan span, HtmlLinkBuilder builder) {
+    if (span is LinkTextSpan && span.link.type == LinkType.url) {
+      final url = span.link.value;
+      if (url == null || url.isEmpty) return span;
+      final built = builder(
+        url,
+        TextSpan(text: span.text, style: span.style),
+        span.style,
+      );
+      return built ?? span;
+    }
+    if (span is TextSpan && span.children != null && span.children!.isNotEmpty) {
+      return TextSpan(
+        text: span.text,
+        style: span.style,
+        recognizer: span.recognizer,
+        children: span.children!.map((c) => _applyLinkBuilderToAutoLinks(c, builder)).toList(),
+      );
+    }
+    return span;
   }
 
   InlineSpan _optimizeTextspan(InlineSpan textSpan) {
@@ -499,14 +536,20 @@ class TextParser extends StatelessWidget {
           }
           nextContext.textStyle =
               parseContext.textStyle.merge(parseContext.linkStyle);
+          if (linkBuilder != null) {
+            nextContext.insideAnchor = true;
+          }
+          final childrenSpan =
+              _parseInlineChildNodes(context, nextContext, node.nodes);
+          final builtByLinkBuilder =
+              linkBuilder?.call(url ?? '', childrenSpan, nextContext.textStyle);
+          if (builtByLinkBuilder != null) return builtByLinkBuilder;
           return LinkTextSpan(
             style: nextContext.textStyle,
             link: Link.parse(value: url ?? '', type: LinkType.url),
             onTapLink: onTapLink,
             onTapDownLink: onTapDownLink,
-            children: <InlineSpan>[
-              _parseInlineChildNodes(context, nextContext, node.nodes)
-            ],
+            children: <InlineSpan>[childrenSpan],
           );
         case 'img':
           if (!showImages || node.attributes['src'] == null) {
@@ -1103,12 +1146,14 @@ class ParseContext {
   TextStyle textStyle;
   TextStyle linkStyle;
   bool condenseWhitespace = true;
+  bool insideAnchor = false;
   int listDepth = 0;
 
   ParseContext({
     TextStyle? textStyle,
     TextStyle? linkStyle,
     this.condenseWhitespace = true,
+    this.insideAnchor = false,
     this.listDepth = 0,
   })  : this.textStyle = textStyle ?? TextStyle(),
         this.linkStyle = linkStyle ?? TextStyle();
@@ -1117,6 +1162,7 @@ class ParseContext {
       : this.textStyle = parseContext.textStyle,
         this.linkStyle = parseContext.linkStyle,
         this.condenseWhitespace = parseContext.condenseWhitespace,
+        this.insideAnchor = parseContext.insideAnchor,
         this.listDepth = parseContext.listDepth;
 }
 
