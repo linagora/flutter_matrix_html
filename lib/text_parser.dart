@@ -6,6 +6,7 @@ import 'package:csslib/visitor.dart' as css;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_highlight/themes/monokai.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:html_unescape/html_unescape.dart';
 import 'package:linkfy_text/linkfy_text.dart';
 
 import 'color_extension.dart';
@@ -840,7 +841,8 @@ class TextParser extends StatelessWidget {
                 .firstWhere((s) => s?.startsWith('language-') ?? false,
                     orElse: () => null)
                 ?.substring('language-'.length);
-            final code = elementNodes.first.text ?? '';
+            final rawCode = elementNodes.first.text ?? '';
+            final code = HtmlUnescape().convert(rawCode);
             return CodeBlock(
               code,
               language: language,
