@@ -736,7 +736,12 @@ class TextParser extends StatelessWidget {
     var currentChildren = <InlineSpan>[];
     final widgets = <Widget>[];
     var lastNodeBlock = false;
-    final cleanup = (bool thisNodeBlock, bool lastElement) {
+    // Tag of the last block element added, so paragraph-to-paragraph
+    // transitions can use a full blank-line gap (WYSIWYG) while other
+    // block transitions keep the compact 4px spacing.
+    String? lastBlockTag;
+    final fontSize = parseContext.textStyle.fontSize ?? 14.0;
+    final cleanup = (bool thisNodeBlock, bool lastElement, [double spacing = 4]) {
       if (currentChildren.isNotEmpty) {
         widgets.add(CleanRichText(
           _optimizeTextspan(TextSpan(children: currentChildren)),
@@ -756,7 +761,7 @@ class TextParser extends StatelessWidget {
       if ((thisNodeBlock || lastNodeBlock) &&
           !lastElement &&
           widgets.isNotEmpty) {
-        widgets.add(SizedBox(height: 4));
+        widgets.add(SizedBox(height: spacing));
       }
     };
     for (final node in nodes) {
@@ -767,14 +772,19 @@ class TextParser extends StatelessWidget {
         continue;
       }
       final widget = _parseNode(context, parseContext, node);
-      final thisNodeBlock = SUPPORTED_BLOCK_ELEMENTS
-          .contains(node is dom.Element ? node.localName?.toLowerCase() : null);
+      final thisTag =
+          node is dom.Element ? node.localName?.toLowerCase() : null;
+      final thisNodeBlock = SUPPORTED_BLOCK_ELEMENTS.contains(thisTag);
       if (widget is CleanRichText && !lastNodeBlock && !thisNodeBlock) {
         currentChildren.add(widget.child);
       } else {
-        cleanup(thisNodeBlock, false);
+        // A blank line typed by the user becomes two <p> paragraphs; give
+        // those a full line-height gap so the blank line stays visible.
+        final paragraphGap = thisTag == 'p' && lastBlockTag == 'p';
+        cleanup(thisNodeBlock, false, paragraphGap ? fontSize : 4.0);
         widgets.add(widget);
       }
+      if (thisNodeBlock) lastBlockTag = thisTag;
       lastNodeBlock = thisNodeBlock;
     }
     cleanup(lastNodeBlock, true);
