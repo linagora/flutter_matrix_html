@@ -32,6 +32,7 @@ dependencies:
   highlight: ^0.7.0
   crypto: ^3.0.1
   csslib: ^0.17.1
+  html_unescape: ^2.0.0
 
 dev_dependencies:
   flutter_test:
