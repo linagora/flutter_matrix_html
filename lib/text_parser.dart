@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as parser;
@@ -95,6 +96,107 @@ const SUPPORTED_BLOCK_ELEMENTS = <String>{
   'summary',
 };
 
+// ── Emoji-aware span splitting ────────────────────────────────────────────────
+// Splits plain-text TextSpan leaves into separate runs for emoji vs regular
+// text so that Flutter shapes each emoji run with the platform emoji font
+// rather than inheriting Inter (which has placeholder glyphs that block emoji
+// fallback). Same fix as Godot PR godotengine/godot#110194.
+
+final _emojiPattern = RegExp( // ignore: deprecated_member_use
+  r'('
+  r'(?:[\u{1F1E6}-\u{1F1FF}]{2})'        // regional indicator pairs (flags)
+  r'|'
+  r'(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]'  // base emoji
+  r'\u{FE0F}?'                            // optional variation selector-16
+  r'(?:[\u{1F3FB}-\u{1F3FF}])?'          // optional skin-tone modifier
+  r'(?:\u{200D}[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]'  // ZWJ sequence
+  r'\u{FE0F}?'
+  r'(?:[\u{1F3FB}-\u{1F3FF}])?)*'
+  r')'
+  r')',
+  unicode: true,
+);
+
+String? _platformEmojiFontFamily() {
+  if (kIsWeb) return null;
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.iOS:
+    case TargetPlatform.macOS:
+      return 'Apple Color Emoji';
+    case TargetPlatform.android:
+    case TargetPlatform.linux:
+      return 'Noto Color Emoji';
+    case TargetPlatform.windows:
+      return 'Segoe UI Emoji';
+    default:
+      return null;
+  }
+}
+
+TextStyle _emojiStyleFrom(TextStyle base) => TextStyle(
+      inherit: false,
+      fontFamily: _platformEmojiFontFamily(),
+      fontFamilyFallback: const [
+        'Apple Color Emoji',
+        'Noto Color Emoji',
+        'Segoe UI Emoji',
+        'Noto Emoji',
+      ],
+      fontSize: base.fontSize ?? 14.0,
+      height: base.height,
+      color: base.color,
+      backgroundColor: base.backgroundColor,
+      decoration: base.decoration,
+      decorationColor: base.decorationColor,
+      decorationStyle: base.decorationStyle,
+      decorationThickness: base.decorationThickness,
+    );
+
+/// Recursively replaces plain-text [TextSpan] leaves with emoji-aware sub-spans.
+/// Spans with a recognizer (links) and [WidgetSpan]s pass through unchanged.
+InlineSpan _applyEmojiSplitting(InlineSpan span) {
+  if (span is WidgetSpan) return span;
+  if (span is! TextSpan) return span;
+  if (span.recognizer != null) return span; // link — preserve tap handler
+
+  final originalChildren = span.children;
+  if (originalChildren != null && originalChildren.isNotEmpty) {
+    return TextSpan(
+      text: span.text,
+      style: span.style,
+      recognizer: span.recognizer,
+      children: originalChildren.map(_applyEmojiSplitting).toList(),
+    );
+  }
+
+  final text = span.text;
+  if (text == null || text.isEmpty) return span;
+
+  final style = span.style ?? const TextStyle();
+  final emojiStyle = _emojiStyleFrom(style);
+  final spans = <InlineSpan>[];
+  var lastIndex = 0;
+
+  for (final match in _emojiPattern.allMatches(text)) {
+    if (match.start > lastIndex) {
+      spans.add(TextSpan(
+        text: text.substring(lastIndex, match.start),
+        style: style,
+      ));
+    }
+    spans.add(TextSpan(text: match.group(0), style: emojiStyle));
+    lastIndex = match.end;
+  }
+
+  if (lastIndex < text.length) {
+    spans.add(TextSpan(text: text.substring(lastIndex), style: style));
+  }
+
+  if (spans.isEmpty) return span; // no emoji found — unchanged
+  return TextSpan(children: spans);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 class TextParser extends StatelessWidget {
   TextParser({
     this.shrinkToFit = false,
@@ -169,7 +271,9 @@ class TextParser extends StatelessWidget {
     }
     final builder = linkBuilder;
     if (builder != null && parseContext.insideAnchor) {
-      return TextSpan(text: finalText, style: parseContext.textStyle);
+      return _applyEmojiSplitting(
+        TextSpan(text: finalText, style: parseContext.textStyle),
+      );
     }
     final result = LinkifyTextSpans(
       text: finalText,
@@ -180,8 +284,9 @@ class TextParser extends StatelessWidget {
       linkTypes: linkTypes ?? const [LinkType.phone, LinkType.url],
       linkStyle: parseContext.textStyle.merge(parseContext.linkStyle),
     );
-    if (builder == null) return result;
-    return _applyLinkBuilderToAutoLinks(result, builder);
+    final emojiResult = _applyEmojiSplitting(result);
+    if (builder == null) return emojiResult;
+    return _applyLinkBuilderToAutoLinks(emojiResult, builder);
   }
 
   InlineSpan _applyLinkBuilderToAutoLinks(InlineSpan span, HtmlLinkBuilder builder) {
@@ -501,10 +606,11 @@ class TextParser extends StatelessWidget {
               } catch (_) {
                 identifier = urlPart;
               }
-              isPill = RegExp(r'^[@#!+][^:]+:[^\/]+$').firstMatch(identifier) !=
+              isPill = RegExp(r'^[@#!+][^:]+:[^/]+$') // ignore: deprecated_member_use
+                  .firstMatch(identifier) !=
                   null;
             } else {
-              final match = RegExp(r'^matrix:(r|roomid|u)\/([^\/]+)$')
+              final match = RegExp(r'^matrix:(r|roomid|u)/([^/]+)$') // ignore: deprecated_member_use
                   .firstMatch(urlLower.split('?').first.split('#').first);
               isPill = match != null && match.group(2) != null;
               if (isPill) {
@@ -947,7 +1053,7 @@ class TextParser extends StatelessWidget {
           nextContext.listDepth++;
           var entry = 1;
           if (node.attributes['start'] is String &&
-              RegExp(r'^[0-9]+$', multiLine: false)
+              RegExp(r'^[0-9]+$', multiLine: false) // ignore: deprecated_member_use
                   .hasMatch(node.attributes['start']!)) {
             entry = int.parse(node.attributes['start']!);
           }

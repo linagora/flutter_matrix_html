@@ -109,7 +109,7 @@ class _CodeBlockState extends State<CodeBlock> {
                   scrollDirection: Axis.horizontal,
                   controller: _horizontalScrollController,
                   child: HighlightView(
-                    widget.code.replaceAll(RegExp(r'\n$'), ''),
+                    widget.code.replaceAll(RegExp(r'\n$'), ''), // ignore: deprecated_member_use
                     language: language,
                     tabSize: 4,
                     theme: monokaiTheme,
