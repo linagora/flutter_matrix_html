@@ -159,8 +159,8 @@ extension CssColor on Color {
     if (_cssReplacements.containsKey(hexString.toLowerCase())) {
       hexString = _cssReplacements[hexString.toLowerCase()]!;
     }
-    final matches =
-        RegExp(r"^#((?:[0-9a-fA-F]{3}){1,2})$").firstMatch(hexString);
+    final matches = RegExp(r"^#((?:[0-9a-fA-F]{3}){1,2})$") // ignore: deprecated_member_use
+        .firstMatch(hexString);
     if (matches == null) {
       return null;
     }
