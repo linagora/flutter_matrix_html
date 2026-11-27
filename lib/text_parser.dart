@@ -784,8 +784,7 @@ class TextParser extends StatelessWidget {
         // A blank line typed by the user becomes two <p> paragraphs; give
         // those a full line-height gap so the blank line stays visible.
         final paragraphGap = thisTag == 'p' && lastBlockTag == 'p';
-        final afterHeading =
-            lastNodeBlock && _headingTags.contains(lastBlockTag);
+        final afterHeading = _headingTags.contains(lastBlockTag);
         cleanup(thisNodeBlock, false,
             afterHeading ? 0 : (paragraphGap ? fontSize : 4.0));
         widgets.add(widget);
