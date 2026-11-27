@@ -68,6 +68,8 @@ const SUPPORTED_INLINE_ELEMENTS = <String>{
 };
 */
 
+const _headingTags = <String>{'h1', 'h2', 'h3', 'h4', 'h5', 'h6'};
+
 const SUPPORTED_BLOCK_ELEMENTS = <String>{
   'table',
   'thead',
@@ -782,7 +784,9 @@ class TextParser extends StatelessWidget {
         // A blank line typed by the user becomes two <p> paragraphs; give
         // those a full line-height gap so the blank line stays visible.
         final paragraphGap = thisTag == 'p' && lastBlockTag == 'p';
-        cleanup(thisNodeBlock, false, paragraphGap ? fontSize : 4.0);
+        final afterHeading = _headingTags.contains(lastBlockTag);
+        cleanup(thisNodeBlock, false,
+            afterHeading ? 0 : (paragraphGap ? fontSize : 4.0));
         widgets.add(widget);
       }
       if (thisNodeBlock) lastBlockTag = thisTag;
@@ -881,40 +885,14 @@ class TextParser extends StatelessWidget {
           }
           break;
         case 'h1':
-          nextContext.textStyle = nextContext.textStyle.merge(TextStyle(
-            fontSize: fontSize * (26.0 / 14.0),
-            fontWeight: FontWeight.bold,
-          ));
-          break;
         case 'h2':
-          nextContext.textStyle = nextContext.textStyle.merge(TextStyle(
-            fontSize: fontSize * (24.0 / 14.0),
-            fontWeight: FontWeight.bold,
-          ));
-          break;
         case 'h3':
-          nextContext.textStyle = nextContext.textStyle.merge(TextStyle(
-            fontSize: fontSize * (22.0 / 14.0),
-            fontWeight: FontWeight.bold,
-          ));
-          break;
         case 'h4':
-          nextContext.textStyle = nextContext.textStyle.merge(TextStyle(
-            fontSize: fontSize * (20.0 / 14.0),
-            fontWeight: FontWeight.w600,
-          ));
-          break;
         case 'h5':
-          nextContext.textStyle = nextContext.textStyle.merge(TextStyle(
-            fontSize: fontSize * (18.0 / 14.0),
-            fontWeight: FontWeight.bold,
-          ));
-          break;
         case 'h6':
-          nextContext.textStyle = nextContext.textStyle.merge(TextStyle(
-            fontSize: fontSize * (18.0 / 14.0),
-            fontWeight: FontWeight.w600,
-          ));
+          // Like the web client: body size, bold, no margin.
+          nextContext.textStyle = nextContext.textStyle
+              .merge(TextStyle(fontWeight: FontWeight.bold));
           break;
         case 'ul':
           // TW-1328: replace bullet points with a dash
